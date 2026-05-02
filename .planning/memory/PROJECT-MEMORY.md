@@ -116,13 +116,57 @@ src/
 
 ---
 
-### 🔲 Next Steps (Fase Berikutnya)
+---
 
-1. **Import data Excel nyata** — buat script import dari file `.xlsx` ke database
-2. **Production deploy** — setup di Portainer Ubuntu, port 8020
-3. **Toast notifications** — feedback UI saat CRUD berhasil/gagal
-4. **Pagination** — untuk daftar project yang banyak
-5. **Custom status label** — rename CUSTOM1/CUSTOM2 di time schedule
+## Entry 002 — 2026-05-02
+**Phase Covered:** Phase 5 (Production Deploy) + Milestone 1 Wrap-up
+**Session Summary:** Finalisasi konfigurasi produksi, peningkatan limit upload Nginx, pembatasan resource container, dan perbaikan build error pada App Router.
 
 ---
-*Last updated: 2026-04-28 · Session: 7bee54a8*
+
+### 🏛️ Architectural Principles & Lessons Learned
+
+**1. App Router API Route Config — Deprecated Pattern**
+- **Prinsip:** Next.js 14 App Router (`route.ts`) TIDAK lagi mendukung `export const config = { api: { bodyParser: false } }`.
+- **Keputusan:** Hapus config tersebut. Gunakan `await request.formData()` secara langsung untuk memproses payload multipart/form-data.
+- **Hidden Gotcha:** Menggunakan pola Pages Router di App Router akan menyebabkan build gagal total dengan pesan error yang samar tentang "Page config is deprecated".
+
+**2. Docker Build Cache Corruption**
+- **Prinsip:** Menjalankan `npm run build` di host sementara container dev sedang melakukan hot-reloading dapat menyebabkan korupsi pada file `webpack-runtime.js` di dalam folder `.next`.
+- **Fix:** Jika muncul error `Cannot find module './XXX.js'` setelah build, hapus folder `.next` secara manual dan restart container.
+
+**3. Nginx Payload Size Consistency**
+- **Prinsip:** Limit upload di sisi aplikasi (Prisma/Next.js) harus selaras dengan konfigurasi Reverse Proxy (Nginx).
+- **Keputusan:** `client_max_body_size` di Nginx ditingkatkan menjadi `50M` untuk mendukung batch upload dokumen pendukung yang ukurannya lebih besar dari foto biasa.
+
+**4. Resource Governance in Production**
+- **Prinsip:** Container tanpa batas resource dapat menyebabkan *host-wide performance degradation* jika terjadi memory leak.
+- **Keputusan:** Menambahkan `deploy.resources.limits` (CPU: 1.0, Memory: 1G) pada `docker-compose.yml` sebagai standar keamanan produksi.
+
+**5. Portainer Stacks Workflow**
+- **Prinsip:** Portainer Stacks tidak membaca file `.env` secara otomatis dari filesystem.
+- **Keputusan:** Environment variables harus di-copy-paste ke UI Portainer menggunakan "Advanced Mode" saat melakukan deploy stack.
+
+---
+
+### ✅ Status per Phase (2026-05-02)
+
+| Phase | Status | Catatan |
+|-------|--------|---------|
+| 1 — Foundation | ✅ Selesai | Infrastructure solid |
+| 2 — Public Portal | ✅ Selesai | Public grid & details |
+| 3 — Admin Panel | ✅ Selesai | Protected CRUD |
+| 4 — Photo + Schedule | ✅ Selesai | Lightbox & Gantt monthly |
+| 5 — Production Deploy | ✅ Selesai | Portainer-ready, limits added |
+
+---
+
+### 🔲 Next Steps (Milestone 2)
+
+1. **PDF Reports** — Export detail project ke format PDF.
+2. **Timeline View Enhancement** — Fitur zoom atau filter per kategori pada Gantt.
+3. **Multi-role Admin** — Memisahkan akses Super Admin dan Viewer Internal.
+4. **Cloud Storage (Optional)** — Migrasi dari local volumes ke MinIO/S3 jika volume data meningkat pesat.
+
+---
+*Last updated: 2026-05-02 · Session: 1dcf0bed*
