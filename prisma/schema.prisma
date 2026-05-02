@@ -1,0 +1,164 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// PROJECT — Data utama project (confirmed dari Excel)
+// ============================================================
+model Project {
+  id             String      @id @default(cuid())
+  name           String      // Project Name
+  position       String?     // Position / Plant
+  startDate      DateTime?   // Start Date
+  pic            String?     // PIC (Report)
+  vendor         String?     // Vendor / Pelaksana
+  vendorPhone    String?     // Phone
+  address        String?     // Street Address
+  noSpr          String?     // NO/SPR
+  correlatedDate DateTime?   // Correlated Date
+  status         Status      @default(PLANNED) // Status Pengerjaan
+  remark         String?     // Remark
+  progress       Int         @default(0)       // 0-100% (tambahan web)
+  year           Int         @default(2026)
+
+  photos         Photo[]
+  documents      Document[]
+  tasks          Task[]
+  statusHistory  StatusLog[]
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([status])
+  @@index([year])
+  @@index([noSpr])
+}
+
+// ============================================================
+// TASK — Baris pekerjaan dalam Time Schedule
+// ============================================================
+model Task {
+  id        String          @id @default(cuid())
+  projectId String
+  project   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String          // e.g. "ACP Desain Wall 5R"
+  order     Int             @default(0)
+  schedule  DailySchedule[]
+
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([projectId])
+}
+
+// ============================================================
+// DAILY SCHEDULE — Status per hari per task (Time Schedule)
+// ============================================================
+model DailySchedule {
+  id        String    @id @default(cuid())
+  taskId    String
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  date      DateTime  @db.Date  // Tanggal spesifik
+  dayNumber Int                 // Urutan hari (1, 2, 3...)
+  dayStatus DayStatus @default(EMPTY)
+  note      String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([taskId, date])
+  @@index([taskId])
+  @@index([date])
+}
+
+// ============================================================
+// PHOTO — Foto progress / hasil project
+// ============================================================
+model Photo {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  filename  String
+  url       String   // Path relatif: /uploads/{projectId}/{filename}
+  caption   String?
+  isCover   Boolean  @default(false)
+  order     Int      @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// ============================================================
+// DOCUMENT — Dokumen pendukung project (PDF, dll)
+// ============================================================
+model Document {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  filename  String
+  url       String   // Path relatif: /uploads/{projectId}/docs/{filename}
+  title     String?  // Nama dokumen (opsional)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// ============================================================
+// STATUS LOG — Riwayat perubahan status project
+// ============================================================
+model StatusLog {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  oldStatus Status?
+  newStatus Status
+  note      String?
+  changedBy String?
+
+  changedAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// ============================================================
+// ADMIN — Akun administrator
+// ============================================================
+model Admin {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  name         String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+enum Status {
+  PLANNED      // Direncanakan
+  ON_PROGRESS  // Sedang Dikerjakan
+  COMPLETED    // Selesai
+  ON_HOLD      // Ditunda
+  CANCELLED    // Dibatalkan
+}
+
+enum DayStatus {
+  WORK     // W — Biru     → Hari kerja aktif
+  REST     // R — Kuning   → Hari istirahat/libur
+  TROUBLE  // T — Teal     → Ada masalah/kendala
+  CUSTOM1  //   — Abu-abu  → Status custom 1
+  CUSTOM2  //   — Coklat   → Status custom 2
+  EMPTY    //   — Hijau    → Tidak ada status
+}

@@ -1,0 +1,26 @@
+# ============================================
+# Dockerfile.dev — Development (Windows Docker)
+# ============================================
+FROM node:20-alpine
+
+# Prisma membutuhkan OpenSSL di Alpine Linux
+RUN apk add --no-cache openssl libc6-compat
+
+WORKDIR /app
+
+# Install deps dulu (layer caching)
+COPY package*.json ./
+RUN npm install
+
+# Copy source
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Expose dev port
+EXPOSE 3000
+
+# Start Next.js dev server
+# WATCHPACK_POLLING=true di-set via docker-compose env
+CMD ["npm", "run", "dev"]

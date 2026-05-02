@@ -1,0 +1,55 @@
+# ============================================
+# Docker Compose — DEVELOPMENT
+# Jalankan: docker compose -f docker-compose.dev.yml up
+# ============================================
+
+services:
+
+  # ─── Next.js App ───────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: eup-pis-app-dev
+    volumes:
+      - .:/app
+      - /app/node_modules           # anonymous volume — isolasi node_modules
+      - uploads:/app/public/uploads # persistent upload storage
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://eupadmin:password@db:5432/eup_pis"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "dev-secret-ganti-di-production-minimal-32karakter"
+      SEED_ADMIN_PASSWORD: "Admin@EUP2026"
+      WATCHPACK_POLLING: "true"     # ← WAJIB untuk hot reload di Windows
+      NODE_ENV: "development"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── PostgreSQL ────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: eup-pis-db-dev
+    ports:
+      - "5433:5432"   # host:5433 → container:5432 (hindari konflik dengan PG lain)
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: eup_pis
+      POSTGRES_USER: eupadmin
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eupadmin -d eup_pis"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata_dev:
+    name: eup-pis-pgdata-dev
+  uploads:
+    name: eup-pis-uploads-dev
