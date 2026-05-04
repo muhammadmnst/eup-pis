@@ -44,4 +44,4 @@ USER nextjs
 EXPOSE 3000
 
 # Jalankan migrate dulu, lalu server
-ENTRYPOINT ["sh", "-c", "echo 'Starting migrations...' && npx prisma migrate deploy && echo 'Migrations completed.' && node server.js"]
+ENTRYPOINT ["sh", "-c", "echo 'Starting migrations...' && npx prisma@5.10.0 migrate deploy && echo 'Migrations completed.' && node server.js"]
