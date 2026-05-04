@@ -90,17 +90,16 @@ docker compose -f docker-compose.dev.yml exec app npm run db:seed
 
 ## 🌐 Deploy Production (Portainer)
 
-```bash
-# 1. Build image
-docker build -t eup-pis:latest .
+Untuk panduan detail instalasi menggunakan Git dan Portainer Stacks, silakan baca:
+👉 **[Panduan Deploy Portainer](DEPLOY-PORTAINER.md)**
 
-# 2. Salin ke server (atau push ke registry)
-# 3. Di Portainer → Stacks → Add Stack
-# 4. Isi file docker-compose.yml
-# 5. Set environment variables (lihat .env.production.example)
-# 6. Deploy!
-# App akan live di: http://SERVER_IP:8020
-```
+Ringkasan:
+1. Push kode ke Repository Git (GitHub/GitLab).
+2. Di Portainer → **Stacks** → **Add Stack**.
+3. Pilih **Repository** dan masukkan URL Git Anda.
+4. Masukkan **Environment Variables** (lihat `.env.production.example`).
+5. Klik **Deploy**. Aplikasi akan berjalan di port **8020**.
+
 
 ## 🗄️ Database Commands
 

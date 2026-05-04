@@ -20,6 +20,7 @@ services:
 
   # ─── Next.js App ───────────────────────────
   app:
+    build: .
     image: eup-pis:latest
     container_name: eup-pis-app
     volumes:

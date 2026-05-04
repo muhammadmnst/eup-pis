@@ -1,78 +1,112 @@
-# Panduan Deploy Production (Portainer)
+# Panduan Lengkap Instalasi & Deployment (Git + Portainer)
 
-Sistem Informasi Project PT. Energi Unggul Persada menggunakan arsitektur containerized modern dengan Docker Compose. Panduan ini menjelaskan cara melakukan deploy aplikasi ke server produksi Ubuntu menggunakan antarmuka web Portainer.
-
-## Prasyarat
-1. Server Ubuntu dengan Docker dan Portainer terinstall.
-2. Akses login ke dashboard Portainer.
-3. Database PostgreSQL credentials (jika tidak menggunakan database container bawaan).
-4. Telah melakukan build image Next.js (bisa build di server atau push ke registry).
+Dokumen ini berisi langkah-langkah detail untuk menginstal aplikasi **EUP Project Information System** menggunakan Git dan melakukan deployment menggunakan **Portainer Stacks**.
 
 ---
 
-## Langkah 1: Persiapan Environment Variables
-1. Buka file `.env.production.example` di repository proyek.
-2. Salin isi file tersebut.
-3. Siapkan nilai-nilai berikut di text editor lokal Anda (Notepad/VSCode):
-   - `DATABASE_URL`: Ganti password dengan password kuat. Format: `postgresql://eupadmin:PASSWORD_ANDA@db:5432/eup_pis`
-   - `NEXTAUTH_URL`: Ganti `SERVER_IP` dengan alamat IP atau domain server Anda (contoh: `http://192.168.1.100:8020`).
-   - `NEXTAUTH_SECRET`: Generate string rahasia 64 karakter. (Di Linux/Mac, gunakan command: `openssl rand -base64 64`).
-   - `POSTGRES_PASSWORD`: Sama dengan password di `DATABASE_URL`.
-   - `SEED_ADMIN_PASSWORD`: Password untuk login admin pertama kali.
+## 📋 Prasyarat
+1. Server (Ubuntu/Debian direkomendasikan) yang sudah terinstall:
+   - **Docker** & **Docker Compose**
+   - **Portainer** (CE atau EE)
+2. Akses ke Dashboard Portainer melalui browser.
+3. Akun Git (GitHub/GitLab) tempat menyimpan kode aplikasi ini.
 
 ---
 
-## Langkah 2: Build Image App (Di Server)
-Jika image belum ada di registry, Anda harus mem-build-nya secara lokal di server.
-Masuk ke terminal server Anda (via SSH) dan arahkan ke folder proyek, lalu jalankan:
+## 🚀 Langkah 1: Persiapan Repository Git
 
-```bash
-docker build -t eup-pis:latest .
+Agar Portainer bisa menarik kode secara otomatis, kode aplikasi Anda harus berada di cloud (GitHub/GitLab).
+
+1. **Buat Repository Baru**: Buat repository kosong di GitHub atau GitLab (misal: `eup-pis`).
+2. **Push Kode ke Git**:
+   Buka terminal di komputer lokal Anda (folder project ini), lalu jalankan:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit production ready"
+   git branch -M main
+   git remote add origin https://github.com/USERNAME_ANDA/eup-pis.git
+   git push -u origin main
+   ```
+   *(Ganti URL dengan URL repository Anda sendiri)*.
+
+---
+
+## ⚙️ Langkah 2: Menyiapkan Environment Variables
+
+Sebelum masuk ke Portainer, siapkan catatan teks berisi variabel berikut. Anda bisa menyalin format ini dan menyesuaikan isinya:
+
+```env
+# Database Configuration
+POSTGRES_DB=eup_pis
+POSTGRES_USER=eupadmin
+POSTGRES_PASSWORD=GANTI_DENGAN_PASSWORD_KUAT
+
+# App Configuration
+DATABASE_URL=postgresql://eupadmin:PASSWORD_DI_ATAS@db:5432/eup_pis
+NEXTAUTH_URL=http://IP_SERVER_ANDA:8020
+NEXTAUTH_SECRET=BUAT_STRING_ACAK_64_KARAKTER
+NODE_ENV=production
+
+# Admin Initial Credentials
+SEED_ADMIN_PASSWORD=PASSWORD_LOGIN_ADMIN_PERTAMA
 ```
 
----
-
-## Langkah 3: Deploy via Portainer Stacks
-1. Login ke dashboard Portainer server Anda.
-2. Pilih environment/endpoint (biasanya `local`).
-3. Di menu sidebar sebelah kiri, klik **Stacks**.
-4. Klik tombol **+ Add stack** di pojok kanan atas.
-5. Beri nama stack, contoh: `eup-pis`.
-6. Pilih build method: **Web editor**.
-7. Buka file `docker-compose.yml` di repository proyek, salin isinya, lalu paste ke Web editor Portainer.
+> **Tips**: Untuk `NEXTAUTH_SECRET`, Anda bisa mengetik `openssl rand -base64 32` di terminal untuk mendapatkan string acak.
 
 ---
 
-## Langkah 4: Memasukkan Environment Variables di Portainer
-Di bawah Web editor Portainer terdapat bagian **Environment variables**.
-1. Klik tombol **Advanced mode**.
-2. Paste seluruh isi teks environment variables yang sudah Anda siapkan di *Langkah 1* ke dalam text area yang muncul.
-3. Pastikan format penulisan sudah benar (e.g. `KUNCI=NILAI`).
+## 🛠️ Langkah 3: Deployment via Portainer Stacks
+
+Langkah ini dilakukan di dalam dashboard Portainer.
+
+1. **Login ke Portainer** dan pilih environment Anda (biasanya `local`).
+2. Klik menu **Stacks** di sidebar kiri.
+3. Klik tombol **+ Add stack**.
+4. **Isi Data Stack**:
+   - **Name**: `eup-pis`
+   - **Build method**: Pilih **Repository**.
+   - **Repository URL**: Masukkan URL Git Anda (contoh: `https://github.com/USERNAME/eup-pis.git`).
+   - **Repository reference**: Masukkan `refs/heads/main` (atau branch utama Anda).
+   - **Compose path**: Pastikan tertulis `docker-compose.yml`.
+5. **Konfigurasi Environment Variables**:
+   - Scroll ke bawah ke bagian **Environment variables**.
+   - Klik tombol **Advanced mode**.
+   - **Paste** seluruh variabel yang sudah Anda siapkan di **Langkah 2** ke dalam kotak teks tersebut.
+6. **Deploy**:
+   - Klik tombol **Deploy the stack**.
+
+> **Catatan**: Karena kita menggunakan `build: .` di dalam `docker-compose.yml`, Portainer akan melakukan build image Next.js langsung di server. Proses ini mungkin memakan waktu 3-7 menit tergantung spesifikasi server Anda.
 
 ---
 
-## Langkah 5: Eksekusi Deploy
-1. Scroll ke paling bawah halaman Stacks.
-2. Klik tombol **Deploy the stack**.
-3. Portainer akan mengunduh image (nginx, postgres) dan menjalankan container Anda berdasarkan `docker-compose.yml`. Proses ini mungkin memakan waktu 1-3 menit.
+## 🔍 Langkah 4: Verifikasi & Akses
+
+1. Tunggu hingga status stack menjadi **Running** (hijau).
+2. Klik pada stack `eup-pis` untuk melihat daftar container.
+3. Pastikan ada 3 container yang berjalan:
+   - `eup-pis-nginx` (Port 8020)
+   - `eup-pis-app`
+   - `eup-pis-db`
+4. **Cek Log**: Klik ikon log (📝) pada container `eup-pis-app`. Jika melihat pesan `Listening on port 3000` dan `Database migrated successfully`, maka aplikasi sudah siap.
+5. **Akses Aplikasi**: Buka browser dan ketik:
+   `http://ALAMAT_IP_SERVER:8020`
 
 ---
 
-## Langkah 6: Verifikasi Status Aplikasi
-1. Setelah stack berhasil dibuat, Anda akan diarahkan ke halaman detail stack `eup-pis`.
-2. Pastikan ketiga service (`app`, `db`, `nginx`) memiliki status **running**.
-3. Klik ikon dokumen (Logs) di samping service `app`.
-4. Pastikan Anda melihat baris seperti berikut yang menandakan database telah di-migrasi dan server telah berjalan:
-   ```
-   Applying migration...
-   Database migrated successfully
-   Listening on port 3000
-   ```
-5. Buka browser dan akses alamat IP server dengan port `8020` (contoh: `http://192.168.1.100:8020`). Halaman depan GA Project Information System akan muncul!
+## 🔄 Pembaruan Aplikasi (Update)
+
+Jika Anda melakukan perubahan kode di masa depan:
+1. Push perubahan ke Git: `git push origin main`.
+2. Di Portainer, buka stack `eup-pis`.
+3. Klik tab **Editor**.
+4. Klik tombol **Update the stack**.
+5. Centang opsi **Prune services** dan **Pull latest image** (jika menggunakan registry) atau biarkan Portainer melakukan build ulang.
 
 ---
 
-## Troubleshooting
-- **Aplikasi mendapatkan error "502 Bad Gateway":** Hal ini biasa terjadi di detik-detik awal karena Nginx (port 8020) nyala lebih dulu sebelum Next.js (`app`) selesai diinisialisasi. Tunggu 1 menit lalu refresh browser.
-- **Gagal Upload File Besar:** Nginx sudah dikonfigurasi untuk menerima upload maksimal 50MB. Jika masih bermasalah, periksa ketersediaan kapasitas disk di server.
-- **Lupa Password Admin:** Anda bisa me-reset password langsung di database PostgreSQL atau mengubah nilai `SEED_ADMIN_PASSWORD` dan me-restart stack jika database di-wipe.
+## ⚠️ Troubleshooting
+
+- **502 Bad Gateway**: Ini normal saat aplikasi baru dinyalakan. Tunggu sekitar 1-2 menit hingga proses inisialisasi Next.js selesai.
+- **Gagal Build**: Pastikan server Anda memiliki RAM minimal 2GB. Build Next.js membutuhkan memori yang cukup besar.
+- **Koneksi Database Error**: Pastikan password di `POSTGRES_PASSWORD` dan `DATABASE_URL` sama persis.

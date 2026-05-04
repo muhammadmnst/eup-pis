@@ -43,4 +43,4 @@ USER nextjs
 EXPOSE 3000
 
 # Jalankan migrate dulu, lalu server
-ENTRYPOINT ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+ENTRYPOINT ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node server.js"]
