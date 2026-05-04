@@ -28,7 +28,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install runtime dependencies
-RUN apk add --no-cache libc6-compat openssl wget curl
+RUN apk add --no-cache libc6-compat openssl wget curl su-exec
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser  --system --uid 1001 nextjs
@@ -40,10 +40,9 @@ COPY --from=builder /app/public           ./public
 COPY --from=builder /app/prisma           ./prisma
 
 # Direktori upload
-RUN mkdir -p public/uploads && chown -R nextjs:nodejs /app
+RUN mkdir -p public/uploads
 
-USER nextjs
 EXPOSE 3000
 
-# Jalankan migrate, lalu seed, lalu server
-ENTRYPOINT ["sh", "-c", "echo 'Starting migrations...' && npx prisma@5.10.0 migrate deploy && echo 'Seeding database...' && node prisma/seed.js || echo 'Seed failed, continuing...' && echo 'Starting server...' && node server.js"]
+# Jalankan migrate, fix permissions, lalu seed, lalu server sebagai user nextjs
+ENTRYPOINT ["sh", "-c", "echo 'Fixing permissions...' && chown -R nextjs:nodejs /app/public/uploads && echo 'Starting migrations...' && npx prisma@5.10.0 migrate deploy && echo 'Seeding database...' && node prisma/seed.js || echo 'Seed failed' && echo 'Starting server...' && exec su-exec nextjs node server.js"]
