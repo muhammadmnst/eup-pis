@@ -16,6 +16,8 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npx prisma generate
+# Compile seed script for production
+RUN npx esbuild prisma/seed.ts --bundle --platform=node --outfile=prisma/seed.js --external:@prisma/client --external:bcryptjs
 ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
@@ -43,5 +45,5 @@ RUN mkdir -p public/uploads && chown -R nextjs:nodejs /app
 USER nextjs
 EXPOSE 3000
 
-# Jalankan migrate dulu, lalu server
-ENTRYPOINT ["sh", "-c", "echo 'Starting migrations...' && npx prisma@5.10.0 migrate deploy && echo 'Migrations completed.' && node server.js"]
+# Jalankan migrate, lalu seed, lalu server
+ENTRYPOINT ["sh", "-c", "echo 'Starting migrations...' && npx prisma@5.10.0 migrate deploy && echo 'Seeding database...' && node prisma/seed.js || echo 'Seed failed, continuing...' && echo 'Starting server...' && node server.js"]
