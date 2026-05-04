@@ -26,7 +26,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install runtime dependencies
-RUN apk add --no-cache libc6-compat openssl wget
+RUN apk add --no-cache libc6-compat openssl wget curl
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser  --system --uid 1001 nextjs
@@ -44,4 +44,4 @@ USER nextjs
 EXPOSE 3000
 
 # Jalankan migrate dulu, lalu server
-ENTRYPOINT ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+ENTRYPOINT ["sh", "-c", "echo 'Starting migrations...' && npx prisma migrate deploy && echo 'Migrations completed.' && node server.js"]
