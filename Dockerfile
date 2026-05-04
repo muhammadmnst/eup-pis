@@ -25,6 +25,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Install runtime dependencies
+RUN apk add --no-cache libc6-compat openssl wget
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser  --system --uid 1001 nextjs
 
@@ -33,14 +36,12 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static     ./.next/static
 COPY --from=builder /app/public           ./public
 COPY --from=builder /app/prisma           ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# Direktori upload (akan di-mount via volume)
-RUN mkdir -p public/uploads && chown nextjs:nodejs public/uploads
+# Direktori upload
+RUN mkdir -p public/uploads && chown -R nextjs:nodejs /app
 
 USER nextjs
 EXPOSE 3000
 
 # Jalankan migrate dulu, lalu server
-ENTRYPOINT ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node server.js"]
+ENTRYPOINT ["sh", "-c", "npx prisma migrate deploy && node server.js"]
