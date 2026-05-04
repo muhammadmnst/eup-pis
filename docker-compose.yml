@@ -9,6 +9,8 @@ services:
   nginx:
     build: ./conf_nginx
     container_name: eup-pis-nginx
+    volumes:
+      - uploads:/app/public/uploads:ro
     ports:
       - "8020:80"
     depends_on:
