@@ -12,7 +12,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             {/* Logo + Brand */}
             <Link href="/" className="flex items-center gap-3 group">
               <div className="w-9 h-9 relative flex items-center justify-center shrink-0">
-                <Image src="/logo.png" alt="Logo" fill className="object-contain" sizes="36px" />
+                <Image src="/logo.png" alt="Logo" fill unoptimized className="object-contain" sizes="36px" />
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-100 leading-tight">EUP Project Tracker</p>

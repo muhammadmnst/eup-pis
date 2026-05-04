@@ -84,6 +84,7 @@ export function PhotoLightbox({ photos, initialIndex = 0, onClose }: Props) {
             src={photo.url}
             alt={photo.caption ?? `Foto ${current + 1}`}
             fill
+            unoptimized
             className="object-contain"
             sizes="(max-width: 1024px) 100vw, 80vw"
             priority
@@ -132,6 +133,7 @@ export function PhotoLightbox({ photos, initialIndex = 0, onClose }: Props) {
                 src={p.url}
                 alt={p.caption ?? `thumb ${i + 1}`}
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="56px"
               />

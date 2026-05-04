@@ -267,7 +267,7 @@ export default async function HomePage({
                   >
                     <div className="relative h-44 bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden shrink-0">
                       {cover ? (
-                        <Image src={cover.url} alt={project.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
+                        <Image src={cover.url} alt={project.name} fill unoptimized className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <Building2 className="w-12 h-12 text-slate-600" />
@@ -310,7 +310,7 @@ export default async function HomePage({
                 >
                   <div className="relative w-full sm:w-56 h-40 sm:h-auto rounded-xl overflow-hidden shrink-0 bg-slate-800">
                     {cover ? (
-                      <Image src={cover.url} alt={project.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 100vw, 256px" />
+                      <Image src={cover.url} alt={project.name} fill unoptimized className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 640px) 100vw, 256px" />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <Building2 className="w-10 h-10 text-slate-600" />

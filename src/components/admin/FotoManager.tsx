@@ -129,6 +129,7 @@ export function FotoManager({ projectId, initialPhotos }: Props) {
                   src={photo.url}
                   alt={photo.caption ?? 'foto'}
                   fill
+                  unoptimized
                   className="object-cover"
                   sizes="(max-width: 640px) 50vw, 25vw"
                 />
