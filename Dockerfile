@@ -45,4 +45,4 @@ RUN mkdir -p public/uploads
 EXPOSE 3000
 
 # Jalankan migrate, fix permissions, lalu seed, lalu server sebagai user nextjs
-ENTRYPOINT ["sh", "-c", "echo 'Fixing permissions...' && chown -R nextjs:nodejs /app && echo 'Starting migrations...' && npx prisma@5.10.0 migrate deploy && echo 'Seeding database...' && node prisma/seed.js || echo 'Seed failed' && echo 'Starting server...' && exec su-exec nextjs node server.js"]
+ENTRYPOINT ["sh", "-c", "echo 'Fixing permissions...' && mkdir -p public/uploads .next/cache && chown -R nextjs:nodejs public/uploads .next/cache && echo 'Starting migrations...' && npx prisma@5.10.0 migrate deploy && echo 'Seeding database...' && node prisma/seed.js || echo 'Seed failed' && echo 'Starting server...' && exec su-exec nextjs node server.js"]
