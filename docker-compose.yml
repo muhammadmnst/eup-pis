@@ -10,6 +10,7 @@ services:
     build: ./conf_nginx
     container_name: eup-pis-nginx
     volumes:
+      - ./public:/app/public:ro
       - uploads:/app/public/uploads:ro
     ports:
       - "8020:80"
